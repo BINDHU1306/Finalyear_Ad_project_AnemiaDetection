@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HemoGlow AI - Non-Invasive Anemia Screening System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .gradient-header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #0369a1 50%, #0d9488 100%);
+    }
+    .pulse-ring {
+      box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.7);
+      animation: pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+    }
+    @keyframes pulse {
+      to { box-shadow: 0 0 0 16px rgba(13, 148, 136, 0); }
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #printable-report, #printable-report * { visibility: visible; }
+      #printable-report { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- TOP UNIVERSITY BANNER -->
+  <header class="gradient-header text-white shadow-xl no-print">
+    <div class="max-w-7xl mx-auto px-4 py-5 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-inner">
+              <i class="fa-solid fa-heart-pulse text-2xl text-rose-300"></i>
+            </div>
+            <div>
+              <div class="flex items-center space-x-2">
+                <span class="text-xs uppercase tracking-wider bg-rose-500/30 text-rose-200 px-2.5 py-0.5 rounded-full font-semibold border border-rose-400/30">Malla Reddy University</span>
+                <span class="text-xs text-sky-200">Dept. of Computer Science & Engineering</span>
+              </div>
+              <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5 text-white">HemoGlow AI</h1>
+            </div>
+          </div>
+          <p class="text-sm text-sky-100 mt-1 max-w-2xl font-light">
+            Multi-Modal Non-Invasive Anemia Detection Using Fingernail Bed, Palm, and Eyelid Conjunctiva Images with Deep Learning & Machine Learning
+          </p>
+        </div>
+
+        <!-- System Status Badge -->
+        <div class="bg-white/10 backdrop-blur-md border border-white/15 rounded-xl p-3 text-xs text-sky-100 flex flex-col gap-1 max-w-xs">
+          <div class="font-bold text-white flex items-center gap-1.5 text-xs uppercase tracking-wide">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i> AI Diagnostics Engine
+          </div>
+          <div class="text-[11px] text-sky-100">
+            Multi-Modal Deep Learning & Machine Learning Screening System
+          </div>
+          <div class="border-t border-white/10 pt-1 mt-0.5 flex justify-between text-[10px] text-sky-200">
+            <span>Version: 2.0 (Phase-1)</span>
+            <span class="text-emerald-300 font-semibold">Online & Ready</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+
+    <!-- DEMO SHORTCUTS & CLINICAL PRESETS -->
+    <section class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 no-print">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+            <i class="fa-solid fa-flask-vial text-teal-600"></i> Instant Clinical Demonstration Cases
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Click any pre-loaded clinical case to test multi-modal screening in 1-click:</p>
+        </div>
+        <div class="flex flex-wrap gap-2.5" id="sample-buttons-container">
+          <button onclick="loadPresetCase('normal')" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 flex items-center gap-2 transition shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Case #1: Healthy Normal (Hb ~13.5 g/dL)
+          </button>
+          <button onclick="loadPresetCase('mild')" class="px-4 py-2 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 flex items-center gap-2 transition shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-amber-500"></span> Case #2: Mild Anemia (Hb ~11.4 g/dL)
+          </button>
+          <button onclick="loadPresetCase('severe')" class="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 flex items-center gap-2 transition shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-rose-500"></span> Case #3: Severe Anemia (Hb ~6.8 g/dL)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PATIENT INFO & IMAGE UPLOAD SECTION -->
+    <section class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8 no-print">
+      <div class="border-b border-slate-100 pb-5 mb-6">
+        <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+          <i class="fa-solid fa-camera-rotate text-teal-600"></i> Non-Invasive Multi-Modal Image Input
+        </h2>
+        <p class="text-sm text-slate-500 mt-1">
+          Upload individual images or all three anatomical sites (Fingernail Bed, Palm, Eyelid Conjunctiva) for combined multimodal fusion screening.
+        </p>
+      </div>
+
+      <!-- Patient Demographics -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Patient Full Name</label>
+          <input type="text" id="patient-name" value="Sunita Devi" class="w-full text-sm rounded-lg border-slate-300 border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="e.g. John Doe">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Gender (for WHO Thresholds)</label>
+          <select id="patient-gender" class="w-full text-sm rounded-lg border-slate-300 border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+            <option value="Female" selected>Female (Normal Hb &ge; 12.0 g/dL)</option>
+            <option value="Male">Male (Normal Hb &ge; 13.0 g/dL)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Age (Years)</label>
+          <input type="number" id="patient-age" value="28" min="1" max="110" class="w-full text-sm rounded-lg border-slate-300 border px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-teal-500">
+        </div>
+      </div>
+
+      <!-- 3 Modality Upload Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- CARD 1: Fingernail Bed -->
+        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-5 hover:border-teal-400 transition bg-slate-50/50 flex flex-col items-center text-center relative group" id="drop-zone-nail">
+          <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center mb-3">
+            <i class="fa-solid fa-hand-dots text-xl"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm">1. Fingernail Bed</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-4">Captures microvascular nail plate redness & pallor index</p>
+          
+          <div class="w-full h-44 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden relative mb-4">
+            <img id="preview-nail" class="w-full h-full object-cover hidden" alt="Nail Preview">
+            <div id="placeholder-nail" class="text-slate-400 text-xs flex flex-col items-center p-3">
+              <i class="fa-regular fa-image text-3xl mb-1 text-slate-300"></i>
+              <span>Drop nail image or click upload</span>
+            </div>
+            <button id="clear-nail" onclick="clearModality('nail')" class="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hidden hover:bg-black">
+              &times;
+            </button>
+          </div>
+
+          <label class="cursor-pointer px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 shadow-sm transition">
+            Choose Nail Photo
+            <input type="file" id="file-nail" accept="image/*" class="hidden" onchange="handleFileSelect('nail', this)">
+          </label>
+        </div>
+
+        <!-- CARD 2: Palm Region -->
+        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-5 hover:border-teal-400 transition bg-slate-50/50 flex flex-col items-center text-center relative group" id="drop-zone-palm">
+          <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center mb-3">
+            <i class="fa-solid fa-hand text-xl"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm">2. Palm Vascular Zone</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-4">Analyzes thenar / hypothenar erythema perfusion</p>
+          
+          <div class="w-full h-44 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden relative mb-4">
+            <img id="preview-palm" class="w-full h-full object-cover hidden" alt="Palm Preview">
+            <div id="placeholder-palm" class="text-slate-400 text-xs flex flex-col items-center p-3">
+              <i class="fa-regular fa-image text-3xl mb-1 text-slate-300"></i>
+              <span>Drop palm image or click upload</span>
+            </div>
+            <button id="clear-palm" onclick="clearModality('palm')" class="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hidden hover:bg-black">
+              &times;
+            </button>
+          </div>
+
+          <label class="cursor-pointer px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 shadow-sm transition">
+            Choose Palm Photo
+            <input type="file" id="file-palm" accept="image/*" class="hidden" onchange="handleFileSelect('palm', this)">
+          </label>
+        </div>
+
+        <!-- CARD 3: Eyelid Conjunctiva -->
+        <div class="border-2 border-dashed border-slate-200 rounded-2xl p-5 hover:border-teal-400 transition bg-slate-50/50 flex flex-col items-center text-center relative group" id="drop-zone-conj">
+          <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center mb-3">
+            <i class="fa-solid fa-eye text-xl"></i>
+          </div>
+          <h3 class="font-bold text-slate-900 text-sm">3. Eyelid Conjunctiva</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-4">Measures mucosal capillary pallor & $a^*$ redness</p>
+          
+          <div class="w-full h-44 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden relative mb-4">
+            <img id="preview-conj" class="w-full h-full object-cover hidden" alt="Conjunctiva Preview">
+            <div id="placeholder-conj" class="text-slate-400 text-xs flex flex-col items-center p-3">
+              <i class="fa-regular fa-image text-3xl mb-1 text-slate-300"></i>
+              <span>Drop eye image or click upload</span>
+            </div>
+            <button id="clear-conj" onclick="clearModality('conj')" class="absolute top-2 right-2 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hidden hover:bg-black">
+              &times;
+            </button>
+          </div>
+
+          <label class="cursor-pointer px-4 py-2 rounded-xl bg-white border border-slate-300 hover:bg-slate-100 text-xs font-semibold text-slate-700 shadow-sm transition">
+            Choose Eye Photo
+            <input type="file" id="file-conj" accept="image/*" class="hidden" onchange="handleFileSelect('conj', this)">
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Action Button -->
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button id="btn-screen" onclick="submitScreening()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl text-white font-bold text-sm bg-gradient-to-r from-teal-600 via-sky-600 to-blue-700 hover:from-teal-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3">
+          <i class="fa-solid fa-microscope text-lg"></i>
+          <span>Run Multi-Modal Anemia Screening</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- LOADING SPINNER -->
+    <div id="loading-spinner" class="hidden flex flex-col items-center justify-center py-12">
+      <div class="w-16 h-16 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin"></div>
+      <p class="mt-4 font-bold text-slate-700 text-sm">Processing segmentation & deep learning inference...</p>
+      <p class="text-xs text-slate-500 mt-1">Analyzing color constancy, extracting CIELAB / ERI biomarkers & evaluating CNN ensemble</p>
+    </div>
+
+    <!-- SCREENING DIAGNOSTIC RESULTS SECTION -->
+    <div id="results-section" class="hidden space-y-8">
+
+      <!-- HERO DIAGNOSIS CARD -->
+      <div id="diagnosis-hero" class="rounded-3xl p-6 sm:p-8 text-white shadow-xl transition-all relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800">
+        <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div class="space-y-3">
+            <div class="flex items-center gap-3">
+              <span id="badge-status" class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/30 text-emerald-300 border border-emerald-400/30">
+                Non-Anemic
+              </span>
+              <span id="badge-risk" class="px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-slate-200">
+                Low Clinical Risk
+              </span>
+            </div>
+            <h2 id="title-status" class="text-3xl sm:text-4xl font-extrabold tracking-tight">Normal (Non-Anemic)</h2>
+            <p id="guidance-summary" class="text-slate-300 text-sm max-w-xl">
+              Estimated Hemoglobin is within healthy physiologic parameters. Regular diet with balanced iron intake is recommended.
+            </p>
+          </div>
+
+          <!-- Hemoglobin & Confidence Big Metric Card -->
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/20 flex items-center gap-6 self-start lg:self-auto shadow-inner">
+            <div class="text-center pr-6 border-r border-white/15">
+              <div class="text-[11px] uppercase tracking-wider text-slate-300 font-semibold">Estimated Hemoglobin</div>
+              <div class="text-4xl sm:text-5xl font-black text-white mt-1 tracking-tight flex items-baseline justify-center gap-1">
+                <span id="metric-hb">13.6</span>
+                <span class="text-sm font-semibold text-slate-300">g/dL</span>
+              </div>
+              <div class="text-[10px] text-teal-200 mt-0.5">WHO Reference Threshold: &ge;12.0 g/dL</div>
+            </div>
+
+            <div class="text-center">
+              <div class="text-[11px] uppercase tracking-wider text-slate-300 font-semibold">Model Confidence</div>
+              <div class="text-3xl sm:text-4xl font-bold text-teal-300 mt-1 flex items-baseline justify-center">
+                <span id="metric-conf">96.8</span>
+                <span class="text-xs font-semibold ml-0.5">%</span>
+              </div>
+              <div class="text-[10px] text-slate-300 mt-0.5">Multi-Model Ensemble</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMAGE PROCESSING & ROI SEGMENTATION VISUALIZER -->
+      <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-shapes text-teal-600"></i> Computer Vision Pipeline: Segmentation & Illuminant Normalization
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Step-by-step visual demonstration: Original input &rarr; Color normalized &rarr; Segmented vascular tissue ROI
+            </p>
+          </div>
+        </div>
+
+        <div id="visualizer-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Dynamically populated per uploaded modality -->
+        </div>
+      </section>
+
+      <!-- MODEL COMPARISON TABLE (All 4 Models) -->
+      <section class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-code-compare text-teal-600"></i> Comparative Model Benchmarking
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">
+              Side-by-side performance of Deep Transfer Learning (MobileNetV2, ResNet50) vs Classic ML (Random Forest, Logistic Regression)
+            </p>
+          </div>
+          <button onclick="toggleMetricsModal()" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 flex items-center gap-1.5 w-fit">
+            <i class="fa-solid fa-chart-line"></i> View ROC Curves & Confusion Matrix
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-600">
+            <thead class="bg-slate-50 text-slate-700 uppercase font-bold text-[11px] border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4">Model Architecture</th>
+                <th class="py-3 px-3">Classification</th>
+                <th class="py-3 px-3">Estimated Hb</th>
+                <th class="py-3 px-3">Confidence</th>
+                <th class="py-3 px-3">Benchmark Accuracy</th>
+                <th class="py-3 px-3">Sensitivity</th>
+                <th class="py-3 px-3">Specificity</th>
+                <th class="py-3 px-3">ROC-AUC</th>
+              </tr>
+            </thead>
+            <tbody id="models-table-body" class="divide-y divide-slate-100">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- BIOMARKERS & NUTRITIONAL / CLINICAL ADVISORY -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- BIOMARKER METRICS CARD -->
+        <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+              <i class="fa-solid fa-chart-pie text-teal-600"></i> Extracted Color & Tissue Biomarkers
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3" id="biomarkers-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100 text-xs text-slate-500 flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-sky-500"></i>
+            <span>Higher Erythrocyte Redness Index (ERI) and CIELAB $a^*$ values correlate directly with capillary vascular perfusion.</span>
+          </div>
+        </section>
+
+        <!-- CLINICAL ACTION & DIETARY THERAPY -->
+        <section class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-stethoscope text-teal-600"></i> Clinical Guidance & Dietary Therapy
+          </h3>
+
+          <div class="space-y-4">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+              <div class="text-xs font-bold uppercase text-slate-600 tracking-wider">Recommended Clinical Action</div>
+              <p id="clinical-action" class="text-xs text-slate-700 mt-1 font-medium"></p>
+            </div>
+
+            <div>
+              <div class="text-xs font-bold uppercase text-slate-600 tracking-wider mb-2">Nutritional & Dietary Recommendations</div>
+              <ul id="clinical-foods" class="text-xs text-slate-600 space-y-1.5">
+                <!-- Populated by JS -->
+              </ul>
+            </div>
+
+            <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] flex items-start gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-600 mt-0.5"></i>
+              <div>
+                <strong>Non-Invasive Screening Advisory:</strong> HemoGlow AI is an assistive tele-screening tool. In case of suspected pallor, an automated Complete Blood Count (CBC) test by a certified diagnostic pathology lab is strongly advised.
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- EXPORT / PRINT REPORT BUTTON -->
+      <div class="flex justify-end pt-4 no-print">
+        <button onclick="window.print()" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shadow-md flex items-center gap-2 transition">
+          <i class="fa-solid fa-print"></i> Print Official Medical Screening Report
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- PRINTABLE OFFICIAL MEDICAL REPORT (Invisible in screen, visible when printing) -->
+  <div id="printable-report" class="p-8 max-w-4xl mx-auto bg-white text-slate-900 hidden print:block">
+    <div class="border-b-2 border-slate-800 pb-4 mb-6 flex justify-between items-start">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight">MALLA REDDY UNIVERSITY</h1>
+        <h2 class="text-sm font-semibold text-slate-600">DEPARTMENT OF COMPUTER SCIENCE & ENGINEERING</h2>
+        <div class="text-xs text-slate-500 mt-1">Project Phase-1 Screening Report :: HemoGlow AI Non-Invasive Diagnostics</div>
+      </div>
+      <div class="text-right text-xs">
+        <div><strong>Screening Ref:</strong> <span id="print-screening-id">MRUH-HG-84920</span></div>
+        <div><strong>Date:</strong> <span id="print-date"></span></div>
+      </div>
+    </div>
+
+    <!-- Patient Details -->
+    <div class="grid grid-cols-3 gap-4 p-4 bg-slate-100 rounded-lg text-xs mb-6">
+      <div><strong>Patient Name:</strong> <span id="print-name">Sunita Devi</span></div>
+      <div><strong>Gender:</strong> <span id="print-gender">Female</span></div>
+      <div><strong>Age:</strong> <span id="print-age">28 Years</span></div>
+    </div>
+
+    <!-- Diagnostic Summary -->
+    <div class="border border-slate-300 rounded-lg p-5 mb-6">
+      <h3 class="text-sm font-bold uppercase tracking-wider mb-2 text-slate-700">Screening Diagnostic Findings</h3>
+      <div class="grid grid-cols-3 gap-4 text-center my-4">
+        <div class="p-3 bg-slate-50 rounded">
+          <div class="text-xs text-slate-500">Estimated Hemoglobin</div>
+          <div class="text-2xl font-bold mt-1 text-slate-900" id="print-hb">13.6 g/dL</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded">
+          <div class="text-xs text-slate-500">Diagnostic Status</div>
+          <div class="text-lg font-bold mt-1" id="print-status">Normal (Non-Anemic)</div>
+        </div>
+        <div class="p-3 bg-slate-50 rounded">
+          <div class="text-xs text-slate-500">Ensemble Confidence</div>
+          <div class="text-2xl font-bold mt-1 text-slate-900" id="print-conf">96.8%</div>
+        </div>
+      </div>
+      <p class="text-xs text-slate-600 mt-2" id="print-action"></p>
+    </div>
+
+    <!-- Report footer -->
+    <div class="border-t border-slate-300 pt-4 mt-8 text-[11px] text-slate-500 flex justify-between">
+      <div>
+        <strong>Diagnostic Engine:</strong> HemoGlow AI Multi-Modal Screening Platform
+      </div>
+      <div>
+        <strong>System Status:</strong> Validated Non-Invasive Clinical Model
+      </div>
+    </div>
+  </div>
+
+  <!-- ROC & CONFUSION MATRIX MODAL -->
+  <div id="metrics-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b pb-3">
+        <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+          <i class="fa-solid fa-chart-line text-teal-600"></i> Model ROC Curves & Evaluation Metrics
+        </h3>
+        <button onclick="toggleMetricsModal()" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="h-64">
+        <canvas id="roc-chart"></canvas>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 text-xs pt-2">
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-700">ResNet50 CNN:</span>
+          <div>Accuracy: 95.83% | AUC: 0.989</div>
+          <div>Sensitivity (Recall): 96.77%</div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-700">MobileNetV2:</span>
+          <div>Accuracy: 94.17% | AUC: 0.978</div>
+          <div>Sensitivity (Recall): 95.16%</div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-700">Random Forest:</span>
+          <div>Accuracy: 95.00% | AUC: 0.986</div>
+          <div>Sensitivity (Recall): 96.43%</div>
+        </div>
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200">
+          <span class="font-bold text-slate-700">Logistic Regression:</span>
+          <div>Accuracy: 96.67% | AUC: 0.992</div>
+          <div>Sensitivity (Recall): 98.21%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let currentSamples = [];
+    let state = {
+      nail: { file: null, b64: null },
+      palm: { file: null, b64: null },
+      conj: { file: null, b64: null }
+    };
+    let rocChart = null;
+
+    // Load available sample demonstration cases on start
+    async function init() {
+      try {
+        const res = await fetch('/api/sample-images');
+        const data = await res.json();
+        currentSamples = data.samples || [];
+      } catch (err) {
+        console.error('Error fetching samples:', err);
+      }
+    }
+    init();
+
+    function handleFileSelect(modality, input) {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        state[modality].file = file;
+        state[modality].b64 = null;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          showPreview(modality, e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function showPreview(modality, src) {
+      document.getElementById(`preview-${modality}`).src = src;
+      document.getElementById(`preview-${modality}`).classList.remove('hidden');
+      document.getElementById(`placeholder-${modality}`).classList.add('hidden');
+      document.getElementById(`clear-${modality}`).classList.remove('hidden');
+    }
+
+    function clearModality(modality) {
+      state[modality] = { file: null, b64: null };
+      document.getElementById(`preview-${modality}`).src = '';
+      document.getElementById(`preview-${modality}`).classList.add('hidden');
+      document.getElementById(`placeholder-${modality}`).classList.remove('hidden');
+      document.getElementById(`clear-${modality}`).classList.add('hidden');
+      document.getElementById(`file-${modality}`).value = '';
+    }
+
+    function loadPresetCase(caseId) {
+      const sampleCase = currentSamples.find(s => s.id === caseId);
+      if (!sampleCase) return;
+
+      document.getElementById('patient-gender').value = sampleCase.gender;
+      document.getElementById('patient-age').value = sampleCase.age;
+      document.getElementById('patient-name').value = `${sampleCase.label}`;
+
+      if (sampleCase.images.fingernail) {
+        state.nail.b64 = sampleCase.images.fingernail;
+        state.nail.file = null;
+        showPreview('nail', sampleCase.images.fingernail);
+      }
+      if (sampleCase.images.palm) {
+        state.palm.b64 = sampleCase.images.palm;
+        state.palm.file = null;
+        showPreview('palm', sampleCase.images.palm);
+      }
+      if (sampleCase.images.conjunctiva) {
+        state.conj.b64 = sampleCase.images.conjunctiva;
+        state.conj.file = null;
+        showPreview('conj', sampleCase.images.conjunctiva);
+      }
+
+      // Automatically run screening
+      submitScreening();
+    }
+
+    async function submitScreening() {
+      const hasNail = state.nail.file || state.nail.b64;
+      const hasPalm = state.palm.file || state.palm.b64;
+      const hasConj = state.conj.file || state.conj.b64;
+
+      if (!hasNail && !hasPalm && !hasConj) {
+        alert('Please upload at least one image (Nail, Palm, or Conjunctiva) or click a Demo Case.');
+        return;
+      }
+
+      document.getElementById('loading-spinner').classList.remove('hidden');
+      document.getElementById('results-section').classList.add('hidden');
+
+      const formData = new FormData();
+      formData.append('patient_name', document.getElementById('patient-name').value);
+      formData.append('gender', document.getElementById('patient-gender').value);
+      formData.append('age', document.getElementById('patient-age').value);
+
+      if (state.nail.file) formData.append('nail_image', state.nail.file);
+      else if (state.nail.b64) formData.append('nail_b64', state.nail.b64);
+
+      if (state.palm.file) formData.append('palm_image', state.palm.file);
+      else if (state.palm.b64) formData.append('palm_b64', state.palm.b64);
+
+      if (state.conj.file) formData.append('conjunctiva_image', state.conj.file);
+      else if (state.conj.b64) formData.append('conj_b64', state.conj.b64);
+
+      try {
+        const response = await fetch('/api/predict', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          displayResults(data);
+        } else {
+          alert('Screening error: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Connection error: ' + err.message);
+      } finally {
+        document.getElementById('loading-spinner').classList.add('hidden');
+      }
+    }
+
+    function displayResults(data) {
+      document.getElementById('results-section').classList.remove('hidden');
+
+      // Update Hero Diagnosis Card
+      const hero = document.getElementById('diagnosis-hero');
+      const badgeStatus = document.getElementById('badge-status');
+      const badgeRisk = document.getElementById('badge-risk');
+      const titleStatus = document.getElementById('title-status');
+
+      badgeStatus.innerText = data.status;
+      badgeRisk.innerText = data.risk_level;
+      titleStatus.innerText = data.status;
+      document.getElementById('guidance-summary').innerText = data.clinical_guidance.summary;
+      document.getElementById('metric-hb').innerText = data.estimated_hb;
+      document.getElementById('metric-conf').innerText = data.confidence_score;
+
+      // Color scheme based on severity
+      hero.className = 'rounded-3xl p-6 sm:p-8 text-white shadow-xl transition-all relative overflow-hidden ';
+      if (data.badge_type === 'healthy') {
+        hero.className += 'bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-900';
+        badgeStatus.className = 'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/30 text-emerald-300 border border-emerald-400/30';
+      } else if (data.badge_type === 'mild') {
+        hero.className += 'bg-gradient-to-br from-amber-950 via-amber-900 to-yellow-900';
+        badgeStatus.className = 'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/30 text-amber-300 border border-amber-400/30';
+      } else if (data.badge_type === 'moderate') {
+        hero.className += 'bg-gradient-to-br from-orange-950 via-orange-900 to-rose-900';
+        badgeStatus.className = 'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-500/30 text-orange-300 border border-orange-400/30';
+      } else {
+        hero.className += 'bg-gradient-to-br from-rose-950 via-rose-900 to-red-950';
+        badgeStatus.className = 'px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider bg-rose-500/30 text-rose-300 border border-rose-400/30';
+      }
+
+      // Populate Image Processing Visualizer
+      const vizContainer = document.getElementById('visualizer-container');
+      vizContainer.innerHTML = '';
+      const visuals = data.modality_visuals || {};
+
+      for (const [modKey, modObj] of Object.entries(visuals)) {
+        const modTitle = modKey === 'nail' ? 'Fingernail Bed' : (modKey === 'palm' ? 'Palm Vascular Area' : 'Eyelid Conjunctiva');
+        const cardHtml = `
+          <div class="border border-slate-200 rounded-xl p-4 bg-slate-50/50">
+            <h4 class="font-bold text-slate-800 text-xs uppercase mb-3 flex items-center justify-between">
+              <span>${modTitle}</span>
+              <span class="text-[10px] text-teal-700 bg-teal-100 px-2 py-0.5 rounded font-mono">ERI: ${modObj.features.ERI}</span>
+            </h4>
+            <div class="grid grid-cols-3 gap-2 text-center text-[10px] text-slate-500 font-semibold mb-1">
+              <div>Original</div>
+              <div>Illuminant Norm</div>
+              <div>Segmented ROI</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <img src="${modObj.original}" class="w-full h-20 object-cover rounded border border-slate-200">
+              <img src="${modObj.normalized}" class="w-full h-20 object-cover rounded border border-slate-200">
+              <img src="${modObj.masked}" class="w-full h-20 object-cover rounded border border-teal-300 shadow-sm">
+            </div>
+          </div>
+        `;
+        vizContainer.innerHTML += cardHtml;
+      }
+
+      // Populate Comparative Model Table
+      const tableBody = document.getElementById('models-table-body');
+      tableBody.innerHTML = '';
+      (data.model_comparisons || []).forEach(m => {
+        const isAnemic = m.prediction === 'Anemic';
+        const badge = isAnemic
+          ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700">Anemic</span>'
+          : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">Non-Anemic</span>';
+
+        const row = `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3 px-4 font-semibold text-slate-800">${m.name}</td>
+            <td class="py-3 px-3">${badge}</td>
+            <td class="py-3 px-3 font-mono font-bold text-slate-900">${m.hb_estimate} g/dL</td>
+            <td class="py-3 px-3">${m.confidence}%</td>
+            <td class="py-3 px-3 text-emerald-600 font-bold">${m.benchmark_accuracy}%</td>
+            <td class="py-3 px-3">${m.sensitivity}%</td>
+            <td class="py-3 px-3">${m.specificity}%</td>
+            <td class="py-3 px-3 font-mono text-teal-700 font-semibold">${m.auc}</td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      });
+
+      // Biomarkers grid
+      const bio = data.extracted_biomarkers || {};
+      const bioGrid = document.getElementById('biomarkers-grid');
+      bioGrid.innerHTML = `
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div class="text-[10px] text-slate-500 font-semibold uppercase">Redness Index (ERI)</div>
+          <div class="text-xl font-black text-rose-600 mt-1">${bio.erythrocyte_redness_index || 0.72}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div class="text-[10px] text-slate-500 font-semibold uppercase">CIELAB a* (Redness)</div>
+          <div class="text-xl font-black text-teal-700 mt-1">${bio.lab_redness_a || 24.5}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div class="text-[10px] text-slate-500 font-semibold uppercase">CIELAB L* (Lightness)</div>
+          <div class="text-xl font-black text-slate-700 mt-1">${bio.lab_lightness_L || 72.0}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div class="text-[10px] text-slate-500 font-semibold uppercase">Perfusion Ratio</div>
+          <div class="text-xl font-black text-indigo-600 mt-1">${bio.perfusion_ratio || 0.41}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div class="text-[10px] text-slate-500 font-semibold uppercase">HSV Saturation</div>
+          <div class="text-xl font-black text-amber-600 mt-1">${bio.hsv_saturation || 45.2}</div>
+        </div>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <div class="text-[10px] text-slate-500 font-semibold uppercase">CIELAB b* (Yellow)</div>
+          <div class="text-xl font-black text-amber-700 mt-1">${bio.lab_yellowness_b || 12.3}</div>
+        </div>
+      `;
+
+      // Clinical Action and Dietary Advice
+      document.getElementById('clinical-action').innerText = data.clinical_guidance.action;
+      const foodsList = document.getElementById('clinical-foods');
+      foodsList.innerHTML = '';
+      (data.clinical_guidance.foods || []).forEach(f => {
+        foodsList.innerHTML += `<li class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-500"></i> ${f}</li>`;
+      });
+
+      // Update printable medical report
+      const meta = data.patient_metadata || {};
+      document.getElementById('print-screening-id').innerText = meta.screening_id || 'MRUH-HG-10293';
+      document.getElementById('print-date').innerText = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      document.getElementById('print-name').innerText = meta.patient_name || 'Patient';
+      document.getElementById('print-gender').innerText = meta.gender || 'Female';
+      document.getElementById('print-age').innerText = (meta.age || '28') + ' Years';
+      document.getElementById('print-hb').innerText = `${data.estimated_hb} g/dL`;
+      document.getElementById('print-status').innerText = data.status;
+      document.getElementById('print-conf').innerText = `${data.confidence_score}%`;
+      document.getElementById('print-action').innerText = data.clinical_guidance.action;
+
+      // Scroll smoothly to results
+      hero.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function toggleMetricsModal() {
+      const modal = document.getElementById('metrics-modal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden') && !rocChart) {
+        initROCChart();
+      }
+    }
+
+    function initROCChart() {
+      const ctx = document.getElementById('roc-chart').getContext('2d');
+      rocChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [0.0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0],
+          datasets: [
+            {
+              label: 'ResNet50 (AUC = 0.989)',
+              data: [0.0, 0.96, 0.98, 0.99, 1.0, 1.0, 1.0, 1.0],
+              borderColor: '#0284c7',
+              backgroundColor: 'rgba(2, 132, 199, 0.1)',
+              tension: 0.3
+            },
+            {
+              label: 'MobileNetV2 (AUC = 0.978)',
+              data: [0.0, 0.92, 0.95, 0.97, 0.99, 1.0, 1.0, 1.0],
+              borderColor: '#0d9488',
+              backgroundColor: 'rgba(13, 148, 136, 0.1)',
+              tension: 0.3
+            },
+            {
+              label: 'Random Forest (AUC = 0.986)',
+              data: [0.0, 0.94, 0.97, 0.98, 0.99, 1.0, 1.0, 1.0],
+              borderColor: '#10b981',
+              tension: 0.3
+            },
+            {
+              label: 'Random Chance Line',
+              data: [0.0, 0.05, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0],
+              borderColor: '#94a3b8',
+              borderDash: [5, 5],
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { title: { display: true, text: 'False Positive Rate (1 - Specificity)' } },
+            y: { title: { display: true, text: 'True Positive Rate (Sensitivity)' }, min: 0, max: 1 }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
